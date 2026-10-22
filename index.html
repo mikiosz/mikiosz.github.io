@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Przestrzeń osobista w klimacie sci-fi, dark premium i nowoczesna, z opisem zainteresowań, galerią i artystycznym akcentem Azzure."
+      content="Osobista strona Mikiosza. Furry, lotnictwo, DCS World i fotografia w nocnym, futurystycznym klimacie."
     />
-    <title>TWÓJ NICK | Przestrzeń osobista</title>
+    <title>Mikiosz | Furry • Lotnictwo • DCS • Fotografia</title>
     <style>
       :root {
         --bg: #09090f;
@@ -933,6 +933,55 @@
           transform: none;
         }
       }
+
+      /* Personalizacja: cztery pasje, artystyczny motyw i galeria bez pustych błędnych zdjęć. */
+      .hero h1 {text-transform:uppercase;}
+      .portrait-card {isolation:isolate;}
+      .portrait-card::after {
+        content:"";position:absolute;inset:1.25rem;border:1px dashed rgba(96,207,255,.15);
+        border-radius:1.4rem;pointer-events:none;
+      }
+      .portrait-constellation {position:absolute;top:12%;left:0;right:0;text-align:center;
+        color:var(--cyan);font-size:1.6rem;letter-spacing:1.15rem;opacity:.52;}
+      .fox-sigil {width:74%;height:74%;color:#bfc8ff;filter:drop-shadow(0 0 22px rgba(167,139,250,.25));}
+      .visual-stamp {position:absolute;bottom:8%;left:0;right:0;text-align:center;
+        font-size:.57rem;font-weight:800;letter-spacing:.22em;color:rgba(237,242,255,.6);}
+      .orbit{position:absolute;width:85%;aspect-ratio:1;border-radius:50%;border:1px solid rgba(96,207,255,.11);
+        transform:rotate(-22deg) scaleY(.52);pointer-events:none;}
+      .orbit-two{width:110%;transform:rotate(58deg) scaleY(.52);border-color:rgba(167,139,250,.1);}
+      .interest-card{min-height:260px;transition:transform .2s ease,border-color .2s ease;}
+      .interest-card:hover{transform:translateY(-5px);border-color:rgba(96,207,255,.35);}
+      .azzure-placeholder{flex-direction:column;gap:.65rem;}
+      .azzure-placeholder .azzure-monogram{font-size:5rem;line-height:1;
+        background:linear-gradient(145deg,var(--violet),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent;}
+      .azzure-placeholder small{font-size:.61rem;letter-spacing:.22em;opacity:.6;}
+      .character-tagline{font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);
+        border-top:1px solid var(--line);padding-top:1rem;}
+      .gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+      .gallery-item.empty{cursor:default;}
+      .gallery-item.empty .gallery-media::after{content:"Wkrótce własne zdjęcie";inset:auto .8rem .8rem .8rem;
+        display:flex;font-size:.56rem;letter-spacing:.12em;}
+      .gallery-media{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
+      .gallery-media .poster-symbol{font-size:clamp(3rem,7vw,6rem);line-height:1;
+        text-shadow:0 0 40px rgba(120,200,255,.38);transition:transform .3s ease;}
+      .gallery-media .poster-index{font-size:.65rem;letter-spacing:.25em;font-weight:800;color:rgba(237,242,255,.72);}
+      .gallery-item.has-image .gallery-media .poster-symbol,.gallery-item.has-image .gallery-media .poster-index{display:none;}
+      .art-furry .gallery-media{background:radial-gradient(circle at 60% 25%,#703e97,#242035 58%,#11121f);}
+      .art-aviation .gallery-media{background:radial-gradient(circle at 70% 16%,#3b8ba3,#18304f 46%,#101621);}
+      .art-dcs .gallery-media{background:radial-gradient(circle at 52% 32%,#34576f,#1b2637 47%,#0d121c);}
+      .art-photo .gallery-media{background:radial-gradient(circle at 55% 26%,#4a4186,#171d37 56%,#090f1b);}
+      .gallery-note{margin:1.5rem 0 0;color:var(--subtle);font-size:.85rem;}
+      .gallery-note code{color:var(--cyan);}
+      @media(max-width:980px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+      @media(max-width:640px){
+        .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .gallery-caption{flex-direction:column;align-items:flex-start;gap:.1rem;}
+        .gallery-item.empty .gallery-media::after{font-size:.46rem;min-height:34px;}
+        .gallery-media .poster-index{font-size:.55rem;}
+        .portrait-wrap{max-width:420px;}
+      }
+      @media(max-width:400px){.gallery-grid{grid-template-columns:1fr;}.gallery-media{aspect-ratio:5/3;}}
+
     </style>
   </head>
   <body>
@@ -943,230 +992,191 @@
       <header class="topbar">
         <nav class="nav container" aria-label="Nawigacja główna">
           <a class="brand" href="#start" aria-label="Przejdź do początku strony">
-            <span class="brand-mark">N</span>
-            <span id="brandNick">TWÓJ NICK</span>
+            <span class="brand-mark">M</span>
+            <span id="brandNick">MIKIOSZ</span>
           </a>
 
           <div class="nav-links">
             <a href="#start">Start</a>
             <a href="#about">O mnie</a>
-            <a href="#interests">Zainteresowania</a>
+            <a href="#interests">Pasje</a>
+            <a href="#azzure">Furry</a>
             <a href="#gallery">Galeria</a>
-            <a href="#azzure">Azzure</a>
           </div>
         </nav>
       </header>
 
       <main id="start">
-        <section class="hero container">
+        <section class="hero container" aria-labelledby="hero-title">
           <div class="hero-copy reveal">
-            <p class="eyebrow">Internetowa przestrzeń</p>
-            <h1><span id="heroNick">TWÓJ NICK</span> <span class="accent">.</span></h1>
+            <p class="eyebrow">Witaj w mojej przestrzeni</p>
+            <h1 id="hero-title"><span id="heroNick">MIKIOSZ</span><span class="accent">.</span></h1>
             <p class="lead">
-              Lubię kiedy świat ma klimat, pasję i dużo przestrzeni na ciekawostki. Gram, oglądam niebo,
-              fotografuję detale, eksperymentuję z technologią i buduję własną, unikalną internetową tożsamość.
+              Cztery pasje, jeden świat. Furry, lotnictwo, DCS World i fotografia.
+              Trochę sztuki, dużo samolotów i jeszcze więcej patrzenia w niebo.
             </p>
-
-            <div class="hero-meta" aria-label="Główne obszary zainteresowań">
-              <span class="pill">Gaming</span>
-              <span class="pill">Lotnictwo</span>
-              <span class="pill">Kosmos</span>
-              <span class="pill">Fotografia</span>
+            <div class="hero-meta" aria-label="Moje cztery pasje">
+              <span class="pill">🦊 Furry</span>
+              <span class="pill">✈️ Lotnictwo</span>
+              <span class="pill">🎮 DCS World</span>
+              <span class="pill">📷 Fotografia</span>
             </div>
-
             <div class="hero-actions">
-              <a class="button primary" href="#about">Poznaj mnie</a>
-              <a class="button secondary" href="#gallery">Zobacz galerię</a>
+              <a class="button primary" href="#interests">Poznaj moje pasje <span aria-hidden="true">↗</span></a>
+              <a class="button secondary" href="#gallery">Moja galeria</a>
             </div>
           </div>
-
           <div class="hero-visual reveal">
-            <div class="portrait-wrap" aria-label="Miejsce na avatar lub grafikę użytkownika">
+            <div class="portrait-wrap" aria-label="Stylizowana grafika motywu strony">
               <div class="portrait-card">
-                <div class="avatar-placeholder" aria-label="Placeholder avataru">AVATAR</div>
+                <div class="orbit orbit-one" aria-hidden="true"></div>
+                <div class="orbit orbit-two" aria-hidden="true"></div>
+                <div class="portrait-constellation" aria-hidden="true">✦ &nbsp; ✧ &nbsp; ✦</div>
+                <div class="avatar-placeholder" aria-hidden="true">
+                  <svg class="fox-sigil" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none">
+                    <path d="M38 80 30 22 75 48 Q100 38 125 48 L170 22 162 80 Q176 107 151 141 L100 174 49 141 Q24 107 38 80Z" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+                    <path d="M46 81 69 100 100 90 131 100 154 81M69 116l18 8m44-8-18 8m-31 16 18 11 18-11M100 151v14" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M60 55 43 42 48 68M140 55l17-13-5 26" stroke="currentColor" stroke-width="3" opacity=".65"/>
+                  </svg>
+                </div>
+                <div class="visual-stamp">FURRY / AVIATION / DCS / PHOTO</div>
               </div>
             </div>
           </div>
         </section>
+
+        
 
         <section id="about" class="container">
           <div class="section-heading reveal">
-            <p class="eyebrow">O mnie</p>
-            <h2>To, co mnie definiuje</h2>
+            <p class="eyebrow">01 / O mnie</p>
+            <h2>Hej, jestem Mikiosz.</h2>
+            <p>To moje miejsce w internecie, poświęcone temu, co naprawdę mnie kręci.</p>
           </div>
-
           <div class="about-layout reveal">
             <div class="panel about-copy">
               <p>
-                Jestem osobą, która łączy pasję do gier, lotnictwa, kosmosu i technologii z zainteresowaniem do
-                estetyki, obrazów i własnego stylu w internecie. Moją przestrzeń tworzą rzeczy, które mnie
-                fascynują — od szczegółów samolotów i symulatorów po nocne niebo, gwiazdy, formacje i oddech
-                technologii w codziennym życiu.
+                Najbardziej fascynuje mnie lotnictwo: od charakterystycznych sylwetek
+                myśliwców po dźwięk silników na pokazach lotniczych. W DCS World mogę
+                przenieść tę pasję za stery wirtualnego samolotu.
               </p>
               <p>
-                Lubię budować własną tożsamość w sposób autentyczny: poprzez grafiki, zdjęcia, pomysły na
-                tworzenie treści i małe, kreatywne eksploracje w sieci. Ta strona ma oddawać klimat mojej
-                osobowości — nie jako CV, lecz jako miejsce, do którego można wejść i od razu poczuć mój świat.
+                Poza kokpitem jest jeszcze artystyczna strona mojego świata:
+                fandom furry, fursony, ilustracje i fotografia. Lubię kadry,
+                które mają klimat, szczególnie samoloty i nocne niebo.
               </p>
             </div>
-
-            <div class="panel notes" aria-label="Krótka charakterystyka zainteresowań">
-              <div class="note">
-                <strong>Gaming</strong>
-                <span>War Thunder, DCS World, Counter-Strike 2, Minecraft, VRChat</span>
-              </div>
-              <div class="note">
-                <strong>Lotnictwo</strong>
-                <span>Samoloty wojskowe, pokazy lotnicze, formacje, symulatory</span>
-              </div>
-              <div class="note">
-                <strong>Kosmos</strong>
-                <span>Astronomia, zorze, Droga Mleczna, gwiazdy i nocne niebo</span>
-              </div>
-              <div class="note">
-                <strong>Technologia</strong>
-                <span>Komputery, Arch Linux, nowe technologie, sprzęt i systemy</span>
-              </div>
+            <div class="panel notes" aria-label="W skrócie">
+              <div class="note"><strong>🦊 Furry</strong><span>Fursony, ilustracje i własna estetyka.</span></div>
+              <div class="note"><strong>✈️ Lotnictwo</strong><span>Myśliwce, airshow i fotografia lotnicza.</span></div>
+              <div class="note"><strong>🎮 DCS World</strong><span>Loty, kokpity i symulacja lotnicza.</span></div>
+              <div class="note"><strong>📷 Fotografia</strong><span>Nocne niebo, zorze i ciekawe kadry.</span></div>
             </div>
           </div>
         </section>
+
+        
 
         <section id="interests" class="container">
           <div class="section-heading reveal">
-            <p class="eyebrow">Zainteresowania</p>
-            <h2>Moje pasje i obszary</h2>
+            <p class="eyebrow">02 / Pasje</p>
+            <h2>Cztery rzeczy, które mnie wciągają</h2>
+            <p>Bez przypadkowych tematów. Tylko to, co faktycznie lubię.</p>
           </div>
-
           <div class="interest-grid reveal">
             <article class="interest-card">
-              <div class="icon" aria-hidden="true">🎮</div>
-              <h3>Gaming</h3>
-              <p>War Thunder, DCS World, Counter-Strike 2, Minecraft i VRChat — wrażenia, szybka akcja i świat pełen klimatu.</p>
+              <div class="icon" aria-hidden="true">🦊</div>
+              <h3>Furry</h3>
+              <p>Fursony, rysunki, fandom i postacie, które mają własny charakter. Lubię artystyczną swobodę tego świata.</p>
             </article>
-
             <article class="interest-card">
               <div class="icon" aria-hidden="true">✈️</div>
               <h3>Lotnictwo</h3>
-              <p>Samoloty wojskowe, pokazy lotnicze, formacje, symulatory i detale, które wzbudzają ciekawość.</p>
+              <p>Wojskowe odrzutowce, pokazy lotnicze, akrobacje i wszystko, co wiąże się z lataniem.</p>
             </article>
-
             <article class="interest-card">
-              <div class="icon" aria-hidden="true">🌌</div>
-              <h3>Kosmos</h3>
-              <p>Astronomia, gwiazdy, zorze polarne, Droga Mleczna i nocne niebo pełne perspektywy i spokoju.</p>
+              <div class="icon" aria-hidden="true">🎮</div>
+              <h3>DCS World</h3>
+              <p>Realistyczne symulatory, loty myśliwcami, nauka obsługi samolotów i własne scenariusze.</p>
             </article>
-
             <article class="interest-card">
               <div class="icon" aria-hidden="true">📷</div>
               <h3>Fotografia</h3>
-              <p>Zdjęcia nocne, samoloty, fotografia mobilna i obróbka zdjęć z naciskiem na atmosferę i detale.</p>
-            </article>
-
-            <article class="interest-card">
-              <div class="icon" aria-hidden="true">💻</div>
-              <h3>Technologia</h3>
-              <p>Komputery, Arch Linux, nowoczesne systemy i narzędzia, które pomagają tworzyć własną przestrzeń online.</p>
-            </article>
-
-            <article class="interest-card">
-              <div class="icon" aria-hidden="true">🎨</div>
-              <h3>Twórczość cyfrowa</h3>
-              <p>Grafika, ilustracje, kompozycje i montaż wideo — to, co łączy estetykę z osobistą ekspresją.</p>
-            </article>
-
-            <article class="interest-card">
-              <div class="icon" aria-hidden="true">🛰️</div>
-              <h3>Studium detalu</h3>
-              <p>Przyszłość, technologia, odrobinę futurystycznej estetyki i różnorodność tematów, które mnie fascynują.</p>
-            </article>
-
-            <article class="interest-card">
-              <div class="icon" aria-hidden="true">🦊</div>
-              <h3>Fandom furry</h3>
-              <p>Artystyczny, społeczny i twórczy aspekt mojej internetowej osobowości — pełen charakteru i ekspresji.</p>
+              <p>Zdjęcia nocnego nieba, zorzy polarnej i lotnictwa. Liczą się światło, szczegóły i atmosfera.</p>
             </article>
           </div>
         </section>
+
+        
 
         <section id="azzure" class="container">
           <div class="section-heading reveal">
-            <p class="eyebrow">Azzure</p>
-            <h2>Opcjonalny artystyczny rozdział</h2>
+            <p class="eyebrow">03 / Furry</p>
+            <h2>Artystyczna strona mojego świata</h2>
+            <p>Postacie, rysunki i wyobraźnia. Tutaj jest miejsce na moją fursonę.</p>
           </div>
-
           <div class="azzure-panel reveal" id="azzurePanel">
-            <div class="azzure-art" aria-label="Miejsce na ilustrację fursony Azzure">
-              <div class="azzure-placeholder">Azzure</div>
+            <div class="azzure-art" aria-label="Stylizowane miejsce na ilustrację Azzure">
+              <div class="azzure-placeholder">
+                <span class="azzure-monogram" aria-hidden="true">✦</span>
+                <span>AZZURE</span>
+                <small>CHARACTER ART / COMING SOON</small>
+              </div>
             </div>
-
             <div class="azzure-copy">
-              <p class="eyebrow">Fursona</p>
+              <p class="eyebrow">Fursona / Character</p>
               <h3>Azzure</h3>
               <p>
-                To artystyczna część mojej internetowej tożsamości — miejsce na rysunek, opis, charakterystyczne
-                detale i własne ilustracje. Możesz łatwo usunąć sekcję, jeśli wolisz utrzymać stronę bardziej
-                minimalistycznie.
+                Furry to dla mnie przede wszystkim kreatywność. Lubię oryginalne
+                postacie i ilustracje, które pokazują coś więcej niż tylko wygląd.
+                W tej sekcji docelowo znajdą się moje ulubione arty i materiały o fursonie.
               </p>
-              <ul>
-                <li>Duża przestrzeń na własny rysunek lub grafikę.</li>
-                <li>Opis, charakter i ambient mojej fursony.</li>
-                <li>Możliwość dodania kolejnych ilustracji w przyszłości.</li>
-              </ul>
+              <div class="character-tagline">Własny styl. Własna historia.</div>
             </div>
           </div>
         </section>
+
+        
 
         <section id="gallery" class="container">
           <div class="section-heading reveal">
-            <p class="eyebrow">Galeria</p>
-            <h2>Moje zdjęcia i grafiki</h2>
+            <p class="eyebrow">04 / Galeria</p>
+            <h2>Ujęcia i inspiracje</h2>
+            <p>Tu pojawią się moje własne zdjęcia i grafiki. Na razie: cztery tematy, cztery wizualne zajawki.</p>
           </div>
-
-          <div class="gallery-grid reveal" id="galleryGrid" aria-live="polite">
-            <button class="gallery-item empty" type="button" data-image="images/photo1.jpg" data-title="Lotnictwo" aria-label="Powiększ zdjęcie: Lotnictwo">
-              <span class="gallery-media" aria-hidden="true"></span>
-              <span class="gallery-caption"><strong>Lotnictwo</strong><span>Zdjęcie</span></span>
+          <div class="gallery-grid reveal" id="galleryGrid">
+            <button class="gallery-item empty art-furry" type="button" data-image="images/furry.jpg" data-title="Furry i ilustracje" aria-label="Ilustracje furry: miejsce na zdjęcie">
+              <span class="gallery-media" aria-hidden="true"><span class="poster-symbol">🦊</span><span class="poster-index">01 / ART</span></span>
+              <span class="gallery-caption"><strong>Furry &amp; Art</strong><span>Ilustracje</span></span>
             </button>
-
-            <button class="gallery-item empty" type="button" data-image="images/photo2.jpg" data-title="Nocne niebo" aria-label="Powiększ zdjęcie: Nocne niebo">
-              <span class="gallery-media" aria-hidden="true"></span>
-              <span class="gallery-caption"><strong>Nocne niebo</strong><span>Galaktyka</span></span>
+            <button class="gallery-item empty art-aviation" type="button" data-image="images/aviation.jpg" data-title="Lotnictwo" aria-label="Lotnictwo: miejsce na zdjęcie">
+              <span class="gallery-media" aria-hidden="true"><span class="poster-symbol">✈</span><span class="poster-index">02 / SKY</span></span>
+              <span class="gallery-caption"><strong>Lotnictwo</strong><span>Airshow</span></span>
             </button>
-
-            <button class="gallery-item empty" type="button" data-image="images/photo3.jpg" data-title="Kosmos" aria-label="Powiększ zdjęcie: Kosmos">
-              <span class="gallery-media" aria-hidden="true"></span>
-              <span class="gallery-caption"><strong>Kosmos</strong><span>Rysunek</span></span>
+            <button class="gallery-item empty art-dcs" type="button" data-image="images/dcs.jpg" data-title="DCS World" aria-label="DCS World: miejsce na zdjęcie">
+              <span class="gallery-media" aria-hidden="true"><span class="poster-symbol">◎</span><span class="poster-index">03 / FLIGHT</span></span>
+              <span class="gallery-caption"><strong>DCS World</strong><span>Symulator</span></span>
             </button>
-
-            <button class="gallery-item empty" type="button" data-image="images/photo4.jpg" data-title="Azzure" aria-label="Powiększ zdjęcie: Azzure">
-              <span class="gallery-media" aria-hidden="true"></span>
-              <span class="gallery-caption"><strong>Azzure</strong><span>Ilustracja</span></span>
-            </button>
-
-            <button class="gallery-item empty" type="button" data-image="images/photo5.jpg" data-title="Motyw podróżniczy" aria-label="Powiększ zdjęcie: Motyw podróżniczy">
-              <span class="gallery-media" aria-hidden="true"></span>
-              <span class="gallery-caption"><strong>Motyw</strong><span>Fotografia</span></span>
-            </button>
-
-            <button class="gallery-item empty" type="button" data-image="images/photo6.jpg" data-title="Własna grafika" aria-label="Powiększ zdjęcie: Własna grafika">
-              <span class="gallery-media" aria-hidden="true"></span>
-              <span class="gallery-caption"><strong>Własna grafika</strong><span>Projekt</span></span>
+            <button class="gallery-item empty art-photo" type="button" data-image="images/photo.jpg" data-title="Fotografia" aria-label="Fotografia: miejsce na zdjęcie">
+              <span class="gallery-media" aria-hidden="true"><span class="poster-symbol">✧</span><span class="poster-index">04 / FRAME</span></span>
+              <span class="gallery-caption"><strong>Fotografia</strong><span>Nocne niebo</span></span>
             </button>
           </div>
+          <p class="gallery-note reveal">Autorskie zdjęcia pojawią się tutaj po dodaniu plików do folderu <code>images/</code> w repozytorium.</p>
         </section>
-      </main>
+      
+
+        </main>
 
       <footer class="footer">
         <div class="container footer-inner">
           <div class="footer-copy">
-            <strong id="footerNick">TWÓJ NICK</strong>
-            Przestrzeń internetowa — osobista, autentyczna i spokojna.
+            <strong id="footerNick">MIKIOSZ</strong>
+            Furry • Lotnictwo • DCS World • Fotografia
           </div>
 
           <div class="social-links" id="socialLinks" aria-label="Publiczne profile">
-            <a href="#" target="_blank" rel="noreferrer noopener">Discord</a>
-            <a href="#" target="_blank" rel="noreferrer noopener">Twitch</a>
-            <a href="#" target="_blank" rel="noreferrer noopener">YouTube</a>
+            <a href="https://github.com/mikiosz" target="_blank" rel="noreferrer noopener">GitHub ↗</a>
           </div>
         </div>
       </footer>
@@ -1184,10 +1194,10 @@
 
     <script>
       const siteConfig = {
-        nick: 'TWÓJ NICK',
-        intro: 'Internetowa przestrzeń',
+        nick: 'MIKIOSZ',
+        intro: 'Furry, lotnictwo, DCS World i fotografia',
         showAzzureSection: true,
-        socialLinks: []
+        socialLinks: [{ label: 'GitHub ↗', href: 'https://github.com/mikiosz' }]
       };
 
       // Zanim publikujesz zdjęcia na stronie, usuń metadane GPS z plików fotograficznych.
@@ -1197,7 +1207,6 @@
       const heroNick = document.getElementById('heroNick');
       const footerNick = document.getElementById('footerNick');
       const socialLinksWrap = document.getElementById('socialLinks');
-      const azurePanel = document.getElementById('azzurePanel');
       const galleryItems = [...document.querySelectorAll('.gallery-item')];
       const lightbox = document.getElementById('lightbox');
       const lightboxImage = document.getElementById('lightboxImage');
@@ -1252,6 +1261,7 @@
         const caption = item.dataset.title || 'Mój obraz';
 
         item.addEventListener('click', () => {
+          if (item.classList.contains('empty')) return;
           const image = new Image();
           image.onload = () => {
             openLightbox(src, caption);
