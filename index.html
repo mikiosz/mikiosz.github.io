@@ -134,6 +134,7 @@ input[type=text]{font:inherit;padding:12px 14px;border-radius:12px;border:1px so
   <div class="btn" id="bl">◀</div><div class="btn" id="br">▶</div>
   <div class="btn wide" id="bg">GAZ</div><div class="btn" id="bb">STOP</div>
   <div class="btn" id="bh">DRIFT</div>
+  <div class="btn" id="be" style="right:18px;bottom:270px;width:66px;height:66px;font-size:14px;background:rgba(255,209,102,.35)">E</div>
 </div>
 
 <!-- INTRO -->
@@ -153,7 +154,7 @@ input[type=text]{font:inherit;padding:12px 14px;border-radius:12px;border:1px so
     <div class="keys">
       <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> lub strzałki — jazda &nbsp;·&nbsp;
       <kbd>Shift</kbd> turbo &nbsp;·&nbsp; <kbd>Spacja</kbd> hamulec ręczny<br>
-      <kbd>R</kbd> radio &nbsp;·&nbsp; <kbd>M</kbd> dźwięk &nbsp;·&nbsp; <kbd>Esc</kbd> pauza
+      <kbd>E</kbd> wysiądź / wsiądź do auta &nbsp;·&nbsp; <kbd>R</kbd> radio &nbsp;·&nbsp; <kbd>M</kbd> dźwięk &nbsp;·&nbsp; <kbd>Esc</kbd> pauza
       &nbsp;·&nbsp; na telefonie: przyciski na ekranie
     </div>
     <p class="foot">Gra fanowska i w pełni autorska. Parodia gatunku, nie jest powiązana
@@ -697,8 +698,10 @@ function makeCar(x,z,isPlayer){
     mesh:null,isPlayer:!!isPlayer};
 }
 
-const player=makeCar(1150,1700,true);
-player.mesh=sledMesh(0xe4283c,true); scene.add(player.mesh);
+const sled=makeCar(1150,1700,true);
+sled.mesh=sledMesh(0xe4283c,true); scene.add(sled.mesh); sled.kind="sled";
+let player=sled;          // to, czym aktualnie sterujesz (sanie, auto albo postac)
+let MODE="drive";          // "drive" | "walk"
 
 // czapka Mikolaja
 const hat=(function(){const M=MB();
@@ -713,6 +716,120 @@ for(let i=0;i<5;i++){
   c.maxS=31; c.acc=13.5; c.turn=2.0; c.gripRoad=0.84; c.gripSnow=0.93;
   c.mesh=sledMesh(0xf2f6ff,false); c.mesh.visible=false; scene.add(c.mesh);
   c.active=false; PATROLS.push(c);
+}
+
+// --- RUCH ULICZNY
+function carMesh(c){
+  const M=MB(); const b=col(c);
+  box(M,0,0.85,0,2.0,0.9,4.3,b);
+  box(M,0,1.6,-0.2,1.75,0.7,2.3,col(0x1a2440),b);
+  box(M,0,2.0,-0.2,1.8,0.12,2.35,col(0xf2f7ff));            // snieg na dachu
+  for(const wx of [-1.0,1.0]) for(const wz of [-1.35,1.35]) box(M,wx,0.42,wz,0.35,0.84,0.84,col(0x111522));
+  box(M,-0.65,0.95,2.17,0.45,0.3,0.1,col(0xfff3cf)); box(M,0.65,0.95,2.17,0.45,0.3,0.1,col(0xfff3cf));
+  box(M,-0.65,0.95,-2.17,0.45,0.3,0.1,col(0xff3a3a)); box(M,0.65,0.95,-2.17,0.45,0.3,0.1,col(0xff3a3a));
+  return toMesh(M,matSolid);
+}
+const STREET_SEGS=STREETS.map(st=>SEGS.filter(g=>g.n===st.n));
+const CARCOLS=[0x2b6cb0,0xf5f5f5,0x222831,0xb83232,0x3c8d5a,0xd6a23a,0x6b4fa0,0x8a9bb0,0x9b2c2c,0x1f7a8c];
+const VEH=[sled];          // wszystkie pojazdy, do ktorych mozna wsiasc
+const TRAFFIC=[];
+for(let i=0;i<34;i++){
+  const si=ri(0,STREETS.length-1); const segs=STREET_SEGS[si]; if(!segs.length) continue;
+  const c=makeCar(0,0,false);
+  c.kind="car"; c.ai=true; c.si=si; c.k=ri(0,segs.length-1); c.u=rr(0,segs[c.k].len);
+  c.dir=RNG()<0.5?1:-1; c.vmax=rr(8,13); c.v=c.vmax; c.wait=0;
+  c.maxS=30; c.acc=13; c.turn=2.3; c.gripRoad=0.82; c.gripSnow=0.91;
+  c.mesh=carMesh(CARCOLS[i%CARCOLS.length]); scene.add(c.mesh);
+  TRAFFIC.push(c); VEH.push(c);
+}
+function trafficStep(c,dt){
+  const segs=STREET_SEGS[c.si];
+  // zwolnij, jesli gracz/pojazd jest tuz przed maska
+  const fx=Math.sin(c.a), fz=Math.cos(c.a);
+  const px=player.x-c.x, pz=player.z-c.z, pd=Math.hypot(px,pz);
+  const blocked = pd<11 && (px*fx+pz*fz)>0;
+  if(c.wait>0){c.wait-=dt; c.v=0;}
+  else c.v=lerp(c.v, blocked?0:c.vmax, Math.min(1,dt*2.5));
+  c.u+=c.dir*c.v*dt;
+  let g=segs[c.k];
+  while(c.u>g.len){ if(c.k<segs.length-1){c.u-=g.len;c.k++;g=segs[c.k];} else {c.u=g.len;c.dir=-1;break;} }
+  while(c.u<0){ if(c.k>0){c.k--;g=segs[c.k];c.u+=g.len;} else {c.u=0;c.dir=1;break;} }
+  const t=c.u/g.len, ux=g.dx/g.len, uz=g.dz/g.len;
+  const lane=Math.min(3.4,g.w*0.25)*c.dir;
+  c.x=g.ax+g.dx*t + (-uz)*-lane;  c.z=g.az+g.dz*t + (ux)*-lane;
+  const ta=Math.atan2(ux*c.dir,uz*c.dir);
+  c.a+=normAng(ta-c.a)*Math.min(1,dt*6);
+  c.vx=Math.sin(c.a)*c.v; c.vz=Math.cos(c.a)*c.v; c.sp=c.v; c.lat=0;
+}
+function resetTraffic(){
+  for(const c of TRAFFIC){
+    const segs=STREET_SEGS[c.si]; c.ai=true; c.isPlayer=false;
+    c.k=ri(0,segs.length-1); c.u=rr(0,segs[c.k].len); c.v=c.vmax; c.wait=0;
+    c.a=0; trafficStep(c,0.016); c.a=Math.atan2(Math.sin(c.a),Math.cos(c.a));
+  }
+}
+resetTraffic();
+
+// --- POSTAC (Mikolaj na piechote)
+const ped={x:0,z:0,a:0,vx:0,vz:0,sp:0,lat:0,onRoad:true,street:"",isPlayer:true,kind:"ped",bob:0};
+ped.mesh=(function(){
+  const M=MB();
+  box(M,-0.28,0.5,0,0.34,1.0,0.36,col(0x1b2338)); box(M,0.28,0.5,0,0.34,1.0,0.36,col(0x1b2338));   // nogi
+  box(M,0,1.45,0,1.05,1.0,0.6,col(0xd81f34));                                                         // kurtka
+  box(M,0,1.45,0.31,0.16,0.9,0.04,col(0xffffff));                                                     // zamek
+  box(M,-0.66,1.4,0,0.26,0.9,0.3,col(0xd81f34)); box(M,0.66,1.4,0,0.26,0.9,0.3,col(0xd81f34));         // rece
+  box(M,0,2.2,0,0.56,0.5,0.52,col(0xf1c9a5));                                                         // glowa
+  box(M,0,2.03,0.22,0.5,0.28,0.12,col(0xffffff));                                                     // broda
+  box(M,0,2.53,0,0.66,0.2,0.62,col(0xffffff)); box(M,0,2.72,-0.08,0.46,0.3,0.42,col(0xd81f34));        // czapka
+  box(M,0,2.9,-0.24,0.18,0.18,0.18,col(0xffffff));
+  const m=toMesh(M,matSolid); m.visible=false; scene.add(m); return m;})();
+
+function stepWalk(p,dt,I){
+  const run=I.turbo?9.5:5.2;
+  p.a+=I.steer*3.2*dt;
+  const fwd=(I.gas?1:0)-(I.brake?0.6:0);
+  p.vx=Math.sin(p.a)*fwd*run; p.vz=Math.cos(p.a)*fwd*run;
+  p.x+=p.vx*dt; p.z+=p.vz*dt; p.sp=fwd*run; p.lat=0;
+  p.bob+=Math.abs(fwd)*dt*run*1.6;
+  const r=nearRoad(p.x,p.z); p.onRoad=r.d<r.w*0.5+6; p.street=r.name;
+  p.x=clamp(p.x,30,2370); p.z=clamp(p.z,30,3170);
+  for(const b of nearBld(p.x,p.z)){
+    const hx=b.w/2+0.6, hz=b.d/2+0.6, dx=p.x-b.x, dz=p.z-b.z;
+    if(Math.abs(dx)<hx&&Math.abs(dz)<hz){
+      if(hx-Math.abs(dx)<hz-Math.abs(dz)) p.x=b.x+Math.sign(dx||1)*hx; else p.z=b.z+Math.sign(dz||1)*hz;
+    }
+  }
+  for(const v of VEH){                       // nie przechodzimy przez auta
+    const dx=p.x-v.x, dz=p.z-v.z, d=Math.hypot(dx,dz);
+    if(d<2.3&&d>0.01){p.x=v.x+dx/d*2.3;p.z=v.z+dz/d*2.3;}
+  }
+  p.water=(inLake(p.x,p.z)||inRiver(p.x,p.z))&&r.d>r.w*0.5+1;
+}
+function nearestVeh(maxD){
+  let best=null,bd=maxD;
+  for(const v of VEH){const d=Math.hypot(v.x-ped.x,v.z-ped.z); if(d<bd){bd=d;best=v;}}
+  return best;
+}
+function toggleCar(){
+  if(G.state!=="play")return;
+  if(MODE==="drive"){
+    if(Math.abs(player.sp)>7){toast("Zwolnij, żeby wysiąść",900);return;}
+    const v=player;
+    v.isPlayer=false; v.vx=0; v.vz=0; v.sp=0; v.lat=0;
+    const rx=Math.cos(v.a), rz=-Math.sin(v.a);
+    ped.x=v.x-rx*2.8; ped.z=v.z-rz*2.8; ped.a=v.a; ped.vx=0; ped.vz=0;
+    ped.mesh.visible=true; player=ped; MODE="walk";
+    auTone(300,0.08,"square",0.05);
+  }else{
+    const v=nearestVeh(5.5);
+    if(!v){toast("Podejdź bliżej auta",800);return;}
+    if(v.ai){
+      v.ai=false; v.vx=Math.sin(v.a)*v.v*0.3; v.vz=Math.cos(v.a)*v.v*0.3;
+      crime(1,"🚗 Auto pożyczone na Mikołajki");
+    }
+    v.isPlayer=true; ped.mesh.visible=false; player=v; MODE="drive";
+    auTone(520,0.08,"square",0.05);
+  }
 }
 
 // --- slup celu + paczka
@@ -813,6 +930,7 @@ const keys={};
 addEventListener("keydown",e=>{
   keys[e.code]=true;
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].indexOf(e.code)>=0) e.preventDefault();
+  if(e.code==="KeyE"||e.code==="KeyF"){toggleCar();}
   if(e.code==="KeyM"){AU.on=!AU.on; if(AU.master)AU.master.gain.value=AU.on?0.5:0;}
   if(e.code==="KeyR"){AU.station=(AU.station+1)%RADIO.length; AU.musicOn=!!RADIO[AU.station].root;
     document.getElementById("h-radio").textContent=RADIO[AU.station].n; toast("📻 "+RADIO[AU.station].n);}
@@ -842,6 +960,8 @@ function bindBtn(id,k){
   el.addEventListener("mouseleave",off);
 }
 bindBtn("bl","l");bindBtn("br","r");bindBtn("bg","g");bindBtn("bb","b");bindBtn("bh","h");
+document.getElementById("be").addEventListener("touchstart",e=>{e.preventDefault();toggleCar();},{passive:false});
+document.getElementById("be").addEventListener("mousedown",e=>{e.preventDefault();toggleCar();});
 const isTouch=("ontouchstart" in window)||navigator.maxTouchPoints>0;
 
 /* ---------- 9. LOGIKA ---------- */
@@ -853,9 +973,9 @@ function toast(txt,ms){
 }
 function upVal(k){return save.up[k]||0;}
 function applyUpgrades(){
-  player.maxS=34+upVal("eng")*4;
-  player.gripRoad=0.80-upVal("tyr")*0.015;
-  player.gripSnow=0.905-upVal("tyr")*0.022;
+  sled.maxS=34+upVal("eng")*4;
+  sled.gripRoad=0.80-upVal("tyr")*0.015;
+  sled.gripSnow=0.905-upVal("tyr")*0.022;
   hat.visible=upVal("hat")>0;
 }
 function pickTarget(){
@@ -980,7 +1100,12 @@ function startRun(){
   applyUpgrades();
   G.state="play"; G.time=240; G.score=0; G.packs=0; G.runCash=0;
   G.wanted=0; G.lastCrime=99; G.dmg=0; G.combo=1; G.dead=false; G.maxW=0;
-  player.x=1152; player.z=1760; player.a=Math.PI; player.vx=0; player.vz=0;
+  if(player!==sled&&player!==ped) player.isPlayer=false;
+  player=sled; MODE="drive"; ped.mesh.visible=false; sled.isPlayer=true;
+  sled.x=1152; sled.z=1760; sled.a=Math.PI; sled.vx=0; sled.vz=0; sled.sp=0; sled.lat=0;
+  resetTraffic();
+  for(const s of SNOWMEN){s.alive=true;s.m.visible=true;}
+  camera.position.set(sled.x,7,sled.z+14); camera.lookAt(sled.x,2,sled.z-10);
   for(const c of PATROLS){c.active=false;c.mesh.visible=false;}
   pickTarget();
   hideAll();
@@ -1141,7 +1266,26 @@ function frame(now){
       if(T.g)inp.gas=true; if(T.b)inp.brake=true; if(T.h)inp.hand=true;
       inp.turbo=T.g&&T.h;
     }
-    stepCar(player,dt,inp);
+    if(MODE==="drive") stepCar(player,dt,inp); else stepWalk(ped,dt,inp);
+
+    // --- ruch uliczny i stluczki
+    for(const c of TRAFFIC){
+      if(c.ai) trafficStep(c,dt);
+      if(c===player) continue;
+      const dx=player.x-c.x, dz=player.z-c.z, d=Math.hypot(dx,dz);
+      const minD = MODE==="drive"?4.0:2.2;
+      if(d<minD&&d>0.01){
+        const nx=dx/d, nz=dz/d;
+        player.x=c.x+nx*minD; player.z=c.z+nz*minD;
+        const hit=Math.hypot(player.vx,player.vz);
+        if(MODE==="drive"){
+          player.vx=player.vx*0.45+nx*5; player.vz=player.vz*0.45+nz*5;
+          if(hit>9){G.shake=Math.min(1,hit/22);G.dmg=Math.min(100,G.dmg+hit*0.25);auNoise(0.3,0.4);}
+          if(hit>16) crime(0.35,"💥 Stłuczka!");
+        }
+        if(c.ai) c.wait=1.2;
+      }
+    }
 
     // --- woda
     if(player.water){
@@ -1196,7 +1340,7 @@ function frame(now){
     // --- silnik, syrena
     if(AU.engG&&AU.eng){
       const sp=Math.abs(player.sp);
-      AU.engG.gain.value=AU.on?(0.015+Math.min(0.05,sp/900)):0;
+      AU.engG.gain.value=(AU.on&&MODE==="drive")?(0.015+Math.min(0.05,sp/900)):0;
       AU.eng.frequency.value=48+sp*2.6+(inp.gas?14:0);
     }
     if(want>0){
@@ -1214,9 +1358,14 @@ function frame(now){
   }
 
   // --- pozycje modeli
-  player.mesh.position.set(player.x,0,player.z);
-  player.mesh.rotation.y=player.a;
-  player.mesh.rotation.z=clamp(-player.lat*0.012,-0.12,0.12);
+  for(const v of VEH){
+    v.mesh.position.set(v.x,0,v.z); v.mesh.rotation.y=v.a;
+    v.mesh.rotation.z = v===player ? clamp(-v.lat*0.012,-0.12,0.12) : 0;
+  }
+  if(MODE==="walk"){
+    ped.mesh.position.set(ped.x,Math.abs(Math.sin(ped.bob))*0.12,ped.z);
+    ped.mesh.rotation.y=ped.a;
+  }
   for(const c of PATROLS){
     if(!c.active)continue;
     c.mesh.position.set(c.x,0,c.z); c.mesh.rotation.y=c.a;
@@ -1229,8 +1378,9 @@ function frame(now){
   // --- kamera
   {
     const fx=Math.sin(player.a), fz=Math.cos(player.a);
-    const back=13+Math.min(9,Math.abs(player.sp)*0.28);
-    const want=new THREE.Vector3(player.x-fx*back,6.4+Math.abs(player.sp)*0.04,player.z-fz*back);
+    const walk=MODE==="walk";
+    const back=walk?6.5:13+Math.min(9,Math.abs(player.sp)*0.28);
+    const want=new THREE.Vector3(player.x-fx*back,(walk?3.4:6.4)+Math.abs(player.sp)*0.04,player.z-fz*back);
     camera.position.lerp(want,1-Math.exp(-6.5*dt));
     if(G.shake>0.002){
       camera.position.x+=rr(-1,1)*G.shake*1.4;
@@ -1238,7 +1388,7 @@ function frame(now){
       camera.position.z+=rr(-1,1)*G.shake*1.4;
       G.shake*=Math.pow(0.08,dt);
     }
-    camera.lookAt(player.x+fx*12,2.2,player.z+fz*12);
+    camera.lookAt(player.x+fx*(walk?6:12),walk?1.8:2.2,player.z+fz*(walk?6:12));
   }
 
   // --- snieg wokol kamery
@@ -1268,8 +1418,11 @@ function frame(now){
       (G.combo>1?" · combo ×"+G.combo.toFixed(2):"");
     const st=document.getElementById("stars").children;
     for(let i=0;i<5;i++) st[i].className = (i<Math.ceil(G.wanted)&&G.wanted>0)?"on":"";
+    let hint="";
+    if(MODE==="walk"){ hint = nearestVeh(5.5) ? "   [E] wsiądź" : "   pieszo"; }
+    else if(Math.abs(player.sp)<7) hint="   [E] wysiądź";
     document.getElementById("street").textContent=
-      (player.onRoad? player.street : "poza drogą · "+player.street)+
+      (player.onRoad? player.street : "poza drogą · "+player.street)+hint+
       (G.dmg>35? "   ⚠ sanie: "+Math.max(0,Math.round(100-G.dmg))+"%" : "");
     drawMini();
   }
