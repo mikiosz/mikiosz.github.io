@@ -383,7 +383,8 @@ function overlaps(x,z,w,d){
 }
 function addBld(b){BLD.push(b);hashAdd(b);}
 
-const WALL=[col(0x2c3550),col(0x343d5c),col(0x3b3346),col(0x2a3a4e),col(0x403a4a),col(0x2f3448)];
+const WALL=[col(0xf1d89b),col(0xf4e6c8),col(0xe8b996),col(0xcfe0c3),col(0xf6efe2),col(0xe9c7c0),col(0xd9cfb4),col(0xbfd4e4),col(0xf0c987)];
+const ROOF=[col(0x8c3b2e),col(0x6e4033),col(0x5a6372),col(0x7a2f2a)];
 
 // charakterystyczne obiekty
 const LANDMARKS=[
@@ -466,6 +467,20 @@ function disc(M,cx,cz,rx,rz,y,c,seg){
     const a0=i/seg*Math.PI*2, a1=(i+1)/seg*Math.PI*2;
     tri(M,cx,y,cz, cx+Math.cos(a1)*rx,y,cz+Math.sin(a1)*rz,
           cx+Math.cos(a0)*rx,y,cz+Math.sin(a0)*rz, c);
+  }
+}
+function roof(M,x,z,w,d,y,h,c,snow){
+  // grzbiet wzdluz dluzszej osi
+  if(w>=d){
+    const x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2;
+    quad(M,[x0,y,z1],[x1,y,z1],[x1,y+h,z],[x0,y+h,z],snow);
+    quad(M,[x1,y,z0],[x0,y,z0],[x0,y+h,z],[x1,y+h,z],snow);
+    tri(M,x0,y,z0,x0,y,z1,x0,y+h,z,c); tri(M,x1,y,z1,x1,y,z0,x1,y+h,z,c);
+  }else{
+    const x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2;
+    quad(M,[x1,y,z1],[x1,y,z0],[x,y+h,z0],[x,y+h,z1],snow);
+    quad(M,[x0,y,z0],[x0,y,z1],[x,y+h,z1],[x,y+h,z0],snow);
+    tri(M,x0,y,z1,x1,y,z1,x,y+h,z1,c); tri(M,x1,y,z0,x0,y,z0,x,y+h,z0,c);
   }
 }
 function cone(M,x,z,r,h,base,c){
@@ -553,6 +568,11 @@ const matGlow=new THREE.MeshBasicMaterial({vertexColors:true});
   for(const b of BLD){
     const snowTop=col(0xf2f7ff);
     box(M,b.x,b.h/2,b.z,b.w,b.h,b.d,b.c,snowTop);
+    if(b.kind==="dom"){
+      box(M,b.x,0.6,b.z,b.w+0.3,1.2,b.d+0.3,col(0x8f8a80));                 // cokol
+      box(M,b.x,b.h-0.3,b.z,b.w+0.5,0.6,b.d+0.5,col(0xffffff));             // gzyms
+      roof(M,b.x,b.z,b.w+0.8,b.d+0.8,b.h,Math.min(b.w,b.d)*0.38,ROOF[(b.x*7+b.z*3|0)%ROOF.length],col(0xf3f8ff));
+    }
     if(b.kind==="church"){
       box(M,b.x-b.w/2+6,b.h/2+10,b.z,8,b.h+20,8,b.c,snowTop);
       cone(M,b.x-b.w/2+6,b.z,6,10,b.h+20,col(0x6a7490));
@@ -571,7 +591,14 @@ const matGlow=new THREE.MeshBasicMaterial({vertexColors:true});
       if(RNG()<0.35)continue;
       const ox=(i+0.5)/cols*b.w-b.w/2, oy=(j+0.5)/rows*b.h;
       const wc= RNG()<0.25? col(0xffd79a): col(0xffeec2);
-      const e=0.3;
+      const e=0.3; const e2=0.12, dk=col(0x2b3346);
+      if(Math.abs(b.x-1150)>Math.abs(b.z-1850)){
+        quad(M,[b.x+b.w/2+e2,oy-1.1,b.z+ox-1.4],[b.x+b.w/2+e2,oy-1.1,b.z+ox+1.4],[b.x+b.w/2+e2,oy+1.1,b.z+ox+1.4],[b.x+b.w/2+e2,oy+1.1,b.z+ox-1.4],dk);
+        quad(M,[b.x-b.w/2-e2,oy-1.1,b.z+ox+1.4],[b.x-b.w/2-e2,oy-1.1,b.z+ox-1.4],[b.x-b.w/2-e2,oy+1.1,b.z+ox-1.4],[b.x-b.w/2-e2,oy+1.1,b.z+ox+1.4],dk);
+      }else{
+        quad(M,[b.x+ox-1.4,oy-1.1,b.z+b.d/2+e2],[b.x+ox+1.4,oy-1.1,b.z+b.d/2+e2],[b.x+ox+1.4,oy+1.1,b.z+b.d/2+e2],[b.x+ox-1.4,oy+1.1,b.z+b.d/2+e2],dk);
+        quad(M,[b.x+ox+1.4,oy-1.1,b.z-b.d/2-e2],[b.x+ox-1.4,oy-1.1,b.z-b.d/2-e2],[b.x+ox-1.4,oy+1.1,b.z-b.d/2-e2],[b.x+ox+1.4,oy+1.1,b.z-b.d/2-e2],dk);
+      }
       // dwie elewacje: +z i -z albo +x i -x (zaleznie od ulicy)
       if(Math.abs(b.x-1150)>Math.abs(b.z-1850)){
         quad(W,[b.x+b.w/2+e,oy-1.1,b.z+ox-1.4],[b.x+b.w/2+e,oy-1.1,b.z+ox+1.4],
@@ -922,7 +949,7 @@ loadSave();
 const G={
   state:"intro", time:240, score:0, packs:0, runCash:0,
   wanted:0, lastCrime:99, target:null, tTime:0, dmg:0,
-  dayT:0.72, storm:0.3, shake:0, garageT:0, combo:1, dead:false
+  dayT:0.18, storm:0.3, shake:0, garageT:0, combo:1, dead:false
 };
 
 const inp={steer:0,gas:false,brake:false,hand:false,turbo:false};
@@ -1099,7 +1126,7 @@ function startRun(){
   if(!AU.timer) AU.timer=setInterval(auMusic,215);
   applyUpgrades();
   G.state="play"; G.time=240; G.score=0; G.packs=0; G.runCash=0;
-  G.wanted=0; G.lastCrime=99; G.dmg=0; G.combo=1; G.dead=false; G.maxW=0;
+  G.wanted=0; G.lastCrime=99; G.dmg=0; G.combo=1; G.dead=false; G.maxW=0; G.dayT=0.06;
   if(player!==sled&&player!==ped) player.isPlayer=false;
   player=sled; MODE="drive"; ped.mesh.visible=false; sled.isPlayer=true;
   sled.x=1152; sled.z=1760; sled.a=Math.PI; sled.vx=0; sled.vz=0; sled.sp=0; sled.lat=0;
@@ -1246,7 +1273,7 @@ function frame(now){
   if(G.state!=="play") drawFlakes(dt*60);
 
   // --- dzien / noc / zamiec
-  G.dayT=(G.dayT+dt/150)%1;
+  G.dayT=(G.dayT+dt/260)%1;
   const sunUp=Math.max(0,Math.sin(G.dayT*Math.PI*2));
   G.storm=0.3+0.35*(0.5+0.5*Math.sin(G.dayT*Math.PI*2*1.7));
   const skyCol=SKY_NIGHT.clone().lerp(SKY_DAY,sunUp*0.9);
