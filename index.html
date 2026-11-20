@@ -134,6 +134,7 @@ input[type=text]{font:inherit;padding:12px 14px;border-radius:12px;border:1px so
   <div class="btn" id="bl">◀</div><div class="btn" id="br">▶</div>
   <div class="btn wide" id="bg">GAZ</div><div class="btn" id="bb">STOP</div>
   <div class="btn" id="bh">DRIFT</div>
+  <div class="btn" id="bs" style="right:106px;bottom:186px;width:66px;height:66px;font-size:12px;background:rgba(127,212,255,.35)">❄<br>STRZAŁ</div>
   <div class="btn" id="be" style="right:18px;bottom:270px;width:66px;height:66px;font-size:14px;background:rgba(255,209,102,.35)">E</div>
 </div>
 
@@ -154,7 +155,7 @@ input[type=text]{font:inherit;padding:12px 14px;border-radius:12px;border:1px so
     <div class="keys">
       <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> lub strzałki — jazda &nbsp;·&nbsp;
       <kbd>Shift</kbd> turbo &nbsp;·&nbsp; <kbd>Spacja</kbd> hamulec ręczny<br>
-      <kbd>E</kbd> wysiądź / wsiądź do auta &nbsp;·&nbsp; <kbd>R</kbd> radio &nbsp;·&nbsp; <kbd>M</kbd> dźwięk &nbsp;·&nbsp; <kbd>Esc</kbd> pauza
+      <kbd>E</kbd> wysiądź / wsiądź do auta &nbsp;·&nbsp; pieszo: <kbd>Q</kbd> / klik — śnieżkomiot &nbsp;·&nbsp; <kbd>R</kbd> radio &nbsp;·&nbsp; <kbd>M</kbd> dźwięk &nbsp;·&nbsp; <kbd>Esc</kbd> pauza
       &nbsp;·&nbsp; na telefonie: przyciski na ekranie
     </div>
     <p class="foot">Gra fanowska i w pełni autorska. Parodia gatunku, nie jest powiązana
@@ -420,11 +421,32 @@ for(let gx=30; gx<2390; gx+=24){
     const r=nearRoad(x,z);
     const front=r.w/2;
     if(r.d < front+6.5 || r.d > front+30) continue;     // tylko pierzeje
-    const w=rr(14,26), d=rr(12,20);
-    if(overlaps(x,z,w,d)) continue;
     const center = Math.hypot(x-1180,z-1850) < 620;
-    addBld({x,z,w,d,h: center? rr(9,17) : rr(7,12),
+    if(!center && RNG()<0.6) continue;                 // poza centrum rzadziej
+    const w=center?rr(16,26):rr(10,14), d=center?rr(12,18):rr(9,12);
+    if(overlaps(x,z,w,d)) continue;
+    addBld({x,z,w,d,h: center? rr(7,11) : rr(5,7),
             c:WALL[ri(0,WALL.length-1)], kind:"dom"});
+  }
+}
+// osiedla blokow z wielkiej plyty (jak Polnoc, Hancza, Centrum-Polnoc)
+const BLOKC=[col(0xd9d4c7),col(0xc9cfd6),col(0xe8dcc0),col(0xbfc8b0),col(0xe3c9b8),col(0xb9c4d4),col(0xf0e2b6)];
+for(let gx=60; gx<2340; gx+=74){
+  for(let gz=60; gz<3140; gz+=74){
+    const x=gx+rr(-8,8), z=gz+rr(-8,8);
+    if(Math.hypot(x-1180,z-1850)<600) continue;
+    if(inLake(x,z)||inRiver(x,z)||inAnyPark(x,z)||inAnyPlaza(x,z)) continue;
+    const along=RNG()<0.5, L=rr(46,86), D=13;
+    const w=along?L:D, d=along?D:L;
+    let ok=true;
+    for(let k=-2;k<=2;k++){
+      const sx=x+(along?k*L/4:0), sz=z+(along?0:k*L/4);
+      const r=nearRoad(sx,sz);
+      if(r.d<r.w/2+14||inLake(sx,sz)||inRiver(sx,sz)||sx<20||sx>2380||sz<20||sz>3180){ok=false;break;}
+    }
+    if(!ok) continue;
+    if(overlaps(x,z,w+12,d+20)) continue;
+    addBld({x,z,w,d,h:RNG()<0.3?31:15.5,c:BLOKC[ri(0,BLOKC.length-1)],kind:"blok"});
   }
 }
 
@@ -588,7 +610,7 @@ const matGlow=new THREE.MeshBasicMaterial({vertexColors:true});
     const r=nearRoad(b.x,b.z);
     const cols=Math.max(2,Math.floor(b.w/6)), rows=Math.max(1,Math.floor(b.h/4.5));
     for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
-      if(RNG()<0.35)continue;
+      if(RNG()<(b.kind==="blok"?0.62:0.35))continue;
       const ox=(i+0.5)/cols*b.w-b.w/2, oy=(j+0.5)/rows*b.h;
       const wc= RNG()<0.25? col(0xffd79a): col(0xffeec2);
       const e=0.3; const e2=0.12, dk=col(0x2b3346);
@@ -797,6 +819,53 @@ function resetTraffic(){
 }
 resetTraffic();
 
+// --- PRZECHODNIE
+function personMesh(coat,hatc){
+  const M=MB();
+  box(M,-0.22,0.45,0,0.28,0.9,0.3,col(0x23293a)); box(M,0.22,0.45,0,0.28,0.9,0.3,col(0x23293a));
+  box(M,0,1.3,0,0.86,0.9,0.5,col(coat));
+  box(M,-0.55,1.25,0,0.22,0.8,0.26,col(coat)); box(M,0.55,1.25,0,0.22,0.8,0.26,col(coat));
+  box(M,0,1.98,0,0.46,0.44,0.44,col(0xf0c8a4));
+  box(M,0,2.28,0,0.5,0.22,0.48,col(hatc));
+  box(M,0,1.7,0.18,0.9,0.16,0.2,col(hatc));                   // szalik
+  return toMesh(M,matSolid);
+}
+const COATS=[0x2b6cb0,0x8a2b2b,0x3c8d5a,0x333a4a,0xd6a23a,0x6b4fa0,0xe07a2f,0x1f7a8c,0x5a4636];
+const HATS=[0xd81f34,0xffffff,0x1b2338,0x3c8d5a,0xffd166];
+const PEDS=[];
+{
+  const walkable=SEGS.filter(g=>g.w>=10);
+  for(let i=0;i<80;i++){
+    const g=walkable[ri(0,walkable.length-1)];
+    const p={g,side:RNG()<0.5?1:-1,t:RNG(),dir:RNG()<0.5?1:-1,v:rr(1.1,1.7),down:0,flee:0,bob:RNG()*6,x:0,z:0,a:0};
+    p.mesh=personMesh(COATS[i%COATS.length],HATS[i%HATS.length]); scene.add(p.mesh);
+    PEDS.push(p);
+  }
+}
+function knockPed(p,why,amount){
+  if(p.down>0) return false;
+  p.down=7; p.mesh.rotation.x=-Math.PI/2; p.mesh.position.y=0.35;
+  crime(amount,why); G.score+=10;
+  for(const q of PEDS) if(q!==p&&Math.hypot(q.x-p.x,q.z-p.z)<40) q.flee=6;
+  return true;
+}
+function stepPeds(dt){
+  for(const p of PEDS){
+    if(p.down>0){ p.down-=dt; if(p.down<=0){p.mesh.rotation.x=0;p.mesh.position.y=0;} continue; }
+    const v=p.flee>0?4.6:p.v; if(p.flee>0)p.flee-=dt;
+    p.t+=p.dir*v*dt/p.g.len;
+    if(p.t>1){p.t=1;p.dir=-1;} if(p.t<0){p.t=0;p.dir=1;}
+    const ux=p.g.dx/p.g.len, uz=p.g.dz/p.g.len, off=(p.g.w/2+4.0)*p.side;
+    p.x=p.g.ax+p.g.dx*p.t-uz*off; p.z=p.g.az+p.g.dz*p.t+ux*off;
+    p.a=Math.atan2(ux*p.dir,uz*p.dir); p.bob+=dt*v*3.5;
+    p.mesh.position.set(p.x,Math.abs(Math.sin(p.bob))*0.08,p.z); p.mesh.rotation.y=p.a;
+    // potracenie
+    if(MODE==="drive"&&Math.abs(player.sp)>5&&Math.hypot(player.x-p.x,player.z-p.z)<2.6){
+      if(knockPed(p,"🚑 Przechodzień w zaspie!",0.6)){G.shake=0.4;auNoise(0.2,0.3);}
+    }
+  }
+}
+
 // --- POSTAC (Mikolaj na piechote)
 const ped={x:0,z:0,a:0,vx:0,vz:0,sp:0,lat:0,onRoad:true,street:"",isPlayer:true,kind:"ped",bob:0};
 ped.mesh=(function(){
@@ -809,7 +878,72 @@ ped.mesh=(function(){
   box(M,0,2.03,0.22,0.5,0.28,0.12,col(0xffffff));                                                     // broda
   box(M,0,2.53,0,0.66,0.2,0.62,col(0xffffff)); box(M,0,2.72,-0.08,0.46,0.3,0.42,col(0xd81f34));        // czapka
   box(M,0,2.9,-0.24,0.18,0.18,0.18,col(0xffffff));
+  // sniezkomiot w prawej rece
+  box(M,0.62,1.62,0.35,0.24,0.24,0.9,col(0xd81f34));                 // reka wyciagnieta
+  box(M,0.62,1.62,0.95,0.3,0.34,1.0,col(0x2a3044));                  // korpus
+  box(M,0.62,1.62,1.55,0.18,0.18,0.5,col(0x9aa6bd));                 // lufa
+  box(M,0.62,1.95,0.85,0.34,0.34,0.5,col(0xf4f9ff));                 // zbiornik na snieg
+  box(M,0.62,1.43,0.75,0.14,0.32,0.16,col(0x1b2338));                // raczka
   const m=toMesh(M,matSolid); m.visible=false; scene.add(m); return m;})();
+
+// --- POCISKI-SNIEZKI + PYL
+const ballGeo=new THREE.SphereGeometry(0.3,8,6), ballMat=new THREE.MeshBasicMaterial({color:0xffffff});
+const BALLS=[]; let shootCD=0;
+const puffGeo=new THREE.BoxGeometry(0.25,0.25,0.25), puffMat=new THREE.MeshBasicMaterial({color:0xf4f9ff});
+const PUFFS=[];
+for(let i=0;i<90;i++){const m=new THREE.Mesh(puffGeo,puffMat);m.visible=false;scene.add(m);PUFFS.push({m,life:0,x:0,y:0,z:0,vx:0,vy:0,vz:0});}
+function puff(x,y,z,n){
+  let k=0;
+  for(const p of PUFFS){ if(p.life>0)continue;
+    p.life=rr(0.35,0.7); p.x=x;p.y=y;p.z=z; p.vx=rr(-5,5);p.vy=rr(1,6);p.vz=rr(-5,5); p.m.visible=true;
+    if(++k>=(n||10))break; }
+}
+function shoot(){
+  if(G.state!=="play"||MODE!=="walk"||shootCD>0) return;
+  shootCD=0.24;
+  // lekkie auto-celowanie w najblizszy cel w stozku przed postacia
+  let a=ped.a, best=0.38;
+  const tg=[]; for(const p of PEDS) if(p.down<=0) tg.push(p);
+  for(const c of PATROLS) if(c.active) tg.push(c);
+  for(const t of tg){
+    const dx=t.x-ped.x, dz=t.z-ped.z, d=Math.hypot(dx,dz); if(d>32||d<1) continue;
+    const da=Math.abs(normAng(Math.atan2(dx,dz)-ped.a));
+    if(da<best){best=da;a=Math.atan2(dx,dz);}
+  }
+  const rx=Math.cos(ped.a), rz=-Math.sin(ped.a);
+  const m=new THREE.Mesh(ballGeo,ballMat); scene.add(m);
+  BALLS.push({m,x:ped.x+Math.sin(ped.a)*2+rx*0.62,y:1.65,z:ped.z+Math.cos(ped.a)*2+rz*0.62,
+              vx:Math.sin(a)*46,vy:1.6,vz:Math.cos(a)*46,life:1.3});
+  auTone(170,0.07,"square",0.06); auNoise(0.05,0.12);
+}
+function stepBalls(dt){
+  shootCD-=dt;
+  for(let i=BALLS.length-1;i>=0;i--){
+    const b=BALLS[i]; let hit=false;
+    b.x+=b.vx*dt; b.y+=b.vy*dt; b.z+=b.vz*dt; b.vy-=9.8*dt; b.life-=dt;
+    if(b.y<0.1||b.life<=0) hit=true;
+    if(!hit) for(const h of nearBld(b.x,b.z)){
+      if(Math.abs(b.x-h.x)<h.w/2&&Math.abs(b.z-h.z)<h.d/2&&b.y<h.h){hit=true;break;}
+    }
+    if(!hit) for(const p of PEDS){
+      if(p.down<=0&&Math.hypot(p.x-b.x,p.z-b.z)<1.2&&b.y<2.6){ knockPed(p,"❄ Śnieżką w czapkę!",0.3); hit=true; break; }
+    }
+    if(!hit) for(const c of PATROLS){
+      if(c.active&&Math.hypot(c.x-b.x,c.z-b.z)<2.8){ c.stun=2.2; G.score+=40; crime(0.35,"❄ Patrol oślepiony!"); hit=true; break; }
+    }
+    if(!hit) for(const c of TRAFFIC){
+      if(c!==player&&Math.hypot(c.x-b.x,c.z-b.z)<2.6){ c.wait=2; hit=true; break; }
+    }
+    if(!hit) for(const s of SNOWMEN){
+      if(s.alive&&Math.hypot(s.x-b.x,s.z-b.z)<1.9){ s.alive=false; s.m.visible=false; G.score+=15; crime(0.2); hit=true; break; }
+    }
+    if(hit){ puff(b.x,Math.max(0.3,b.y),b.z,10); scene.remove(b.m); BALLS.splice(i,1); }
+    else b.m.position.set(b.x,b.y,b.z);
+  }
+  for(const p of PUFFS){ if(p.life<=0)continue;
+    p.life-=dt; p.vy-=12*dt; p.x+=p.vx*dt; p.y=Math.max(0.1,p.y+p.vy*dt); p.z+=p.vz*dt;
+    p.m.position.set(p.x,p.y,p.z); if(p.life<=0)p.m.visible=false; }
+}
 
 function stepWalk(p,dt,I){
   const run=I.turbo?9.5:5.2;
@@ -964,6 +1098,7 @@ addEventListener("keydown",e=>{
   if(e.code==="Escape"&&G.state==="play"){G.state="pause"; show("s-intro");}
 });
 addEventListener("keyup",e=>{keys[e.code]=false;});
+canvas.addEventListener("mousedown",e=>{ if(e.button===0) shoot(); });
 
 function readKeys(){
   const L=keys.KeyA||keys.ArrowLeft, R=keys.KeyD||keys.ArrowRight;
@@ -987,6 +1122,7 @@ function bindBtn(id,k){
   el.addEventListener("mouseleave",off);
 }
 bindBtn("bl","l");bindBtn("br","r");bindBtn("bg","g");bindBtn("bb","b");bindBtn("bh","h");
+document.getElementById("bs").addEventListener("touchstart",e=>{e.preventDefault();shoot();},{passive:false});
 document.getElementById("be").addEventListener("touchstart",e=>{e.preventDefault();toggleCar();},{passive:false});
 document.getElementById("be").addEventListener("mousedown",e=>{e.preventDefault();toggleCar();});
 const isTouch=("ontouchstart" in window)||navigator.maxTouchPoints>0;
@@ -1081,6 +1217,7 @@ function stepCar(c,dt,I){
   }
 }
 function patrolAI(c,dt){
+  if(c.stun>0){ c.stun-=dt; stepCar(c,dt,{steer:0.4,gas:false,brake:true,hand:true,turbo:false}); return; }
   const dx=player.x-c.x, dz=player.z-c.z;
   const want=Math.atan2(dx,dz);
   const diff=normAng(want-c.a);
@@ -1092,7 +1229,7 @@ function patrolAI(c,dt){
     const nx=dx/(d||1), nz=dz/(d||1);
     player.vx+=nx*7; player.vz+=nz*7;
     c.vx-=nx*4; c.vz-=nz*4;
-    G.shake=0.9; G.dmg=Math.min(100,G.dmg+9);
+    G.shake=0.9; G.dmg=Math.min(100,G.dmg+(MODE==="walk"?22:9));
     auNoise(0.28,0.4);
   }
   if(d>1100) c.active=false, c.mesh.visible=false;
@@ -1112,7 +1249,7 @@ function deliver(){
 }
 function endRun(reason){
   G.state="over"; G.dead=true;
-  document.getElementById("ov-title").textContent=reason==="dmg"?"SANIE ROZBITE":"CZAS MINĄŁ";
+  document.getElementById("ov-title").textContent=reason==="dmg"?(MODE==="walk"?"ZATRZYMANY":"SANIE ROZBITE"):"CZAS MINĄŁ";
   document.getElementById("ov-kick").textContent=reason==="dmg"?"Kraksa":"Koniec rundy";
   document.getElementById("ov-sum").innerHTML=
     "Paczki: <b>"+G.packs+"</b> &nbsp;·&nbsp; Punkty: <b>"+G.score+"</b> &nbsp;·&nbsp; Zarobek: <b>"+G.runCash+" zł</b>"+
@@ -1132,6 +1269,9 @@ function startRun(){
   sled.x=1152; sled.z=1760; sled.a=Math.PI; sled.vx=0; sled.vz=0; sled.sp=0; sled.lat=0;
   resetTraffic();
   for(const s of SNOWMEN){s.alive=true;s.m.visible=true;}
+  for(const p of PEDS){p.down=0;p.flee=0;p.mesh.rotation.x=0;}
+  for(const c of PATROLS) c.stun=0;
+  for(const b of BALLS) scene.remove(b.m); BALLS.length=0;
   camera.position.set(sled.x,7,sled.z+14); camera.lookAt(sled.x,2,sled.z-10);
   for(const c of PATROLS){c.active=false;c.mesh.visible=false;}
   pickTarget();
@@ -1295,6 +1435,9 @@ function frame(now){
     }
     if(MODE==="drive") stepCar(player,dt,inp); else stepWalk(ped,dt,inp);
 
+    stepPeds(dt); stepBalls(dt);
+    if(keys.KeyQ) shoot();
+
     // --- ruch uliczny i stluczki
     for(const c of TRAFFIC){
       if(c.ai) trafficStep(c,dt);
@@ -1446,7 +1589,7 @@ function frame(now){
     const st=document.getElementById("stars").children;
     for(let i=0;i<5;i++) st[i].className = (i<Math.ceil(G.wanted)&&G.wanted>0)?"on":"";
     let hint="";
-    if(MODE==="walk"){ hint = nearestVeh(5.5) ? "   [E] wsiądź" : "   pieszo"; }
+    if(MODE==="walk"){ hint = nearestVeh(5.5) ? "   [E] wsiądź" : "   pieszo · [Q] śnieżkomiot"; }
     else if(Math.abs(player.sp)<7) hint="   [E] wysiądź";
     document.getElementById("street").textContent=
       (player.onRoad? player.street : "poza drogą · "+player.street)+hint+
